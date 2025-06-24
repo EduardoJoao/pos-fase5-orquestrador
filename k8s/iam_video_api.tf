@@ -1,14 +1,25 @@
-# OIDC provider do cluster EKS
+# Busca o cluster EKS já existente por nome
 data "aws_eks_cluster" "eks" {
-  name = aws_eks_cluster.eks.name
+  name = "events-cluster"  # Nome do cluster EKS existente
 }
 
-data "aws_eks_cluster_auth" "eks" {
-  name = aws_eks_cluster.eks.name
-}
-
-data "aws_iam_openid_connect_provider" "oidc" {
+# Busca o OIDC provider associado ao cluster
+data "aws_iam_openid_connect_provider" "eks" {
   url = data.aws_eks_cluster.eks.identity[0].oidc[0].issuer
+}
+
+# Busca os buckets S3 existentes por nome
+data "aws_s3_bucket" "user_video_uploads" {
+  bucket = "fiapfase5-user-video-uploads"
+}
+
+data "aws_s3_bucket" "processed_videos" {
+  bucket = "fiapfase5-processed-videos"
+}
+
+# Busca a fila SQS por nome
+data "aws_sqs_queue" "video_processing_queue" {
+  name = "video-processing-queue"
 }
 
 # IAM Role para o video-api
@@ -21,7 +32,7 @@ resource "aws_iam_role" "video_api_irsa" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.oidc.arn
+          Federated = data.aws_iam_openid_connect_provider.eks.arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
@@ -49,10 +60,10 @@ resource "aws_iam_policy" "video_api_policy" {
           "s3:DeleteObject"
         ]
         Resource = [
-          aws_s3_bucket.user_video_uploads.arn,
-          "${aws_s3_bucket.user_video_uploads.arn}/*",
-          aws_s3_bucket.processed_videos.arn,
-          "${aws_s3_bucket.processed_videos.arn}/*"
+          data.aws_s3_bucket.user_video_uploads.arn,
+          "${data.aws_s3_bucket.user_video_uploads.arn}/*",
+          data.aws_s3_bucket.processed_videos.arn,
+          "${data.aws_s3_bucket.processed_videos.arn}/*"
         ]
       },
       {
@@ -63,7 +74,7 @@ resource "aws_iam_policy" "video_api_policy" {
           "sqs:DeleteMessage",
           "sqs:GetQueueAttributes"
         ]
-        Resource = aws_sqs_queue.video_processing_queue.arn
+        Resource = data.aws_sqs_queue.video_processing_queue.arn
       }
     ]
   })
