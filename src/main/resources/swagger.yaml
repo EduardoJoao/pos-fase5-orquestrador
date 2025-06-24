@@ -1,0 +1,153 @@
+openapi: 3.0.3
+info:
+  title: FIAP X - Processador de Vídeos
+  version: "1.0.0"
+  description: API para upload, processamento e download de vídeos com extração de frames.
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /upload:
+    post:
+      summary: Faz upload de um vídeo e processa, retornando uma mensagem de sucesso.
+      tags:
+        - Upload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                video:
+                  type: string
+                  format: binary
+                  description: Arquivo de vídeo.
+      responses:
+        '200':
+          description: Processamento com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Processamento com sucesso"
+
+  /download/process-and-download:
+    post:
+      summary: Faz upload do vídeo, processa e retorna diretamente o ZIP com os frames.
+      tags:
+        - Download
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                video:
+                  type: string
+                  format: binary
+                  description: Arquivo de vídeo.
+      responses:
+        '200':
+          description: Arquivo ZIP com os frames extraídos
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+
+  /download/{id}:
+    post:
+      summary: Baixa o arquivo ZIP dos frames processados
+      tags:
+        - Download
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Nome do arquivo ZIP
+      responses:
+        '200':
+          description: Arquivo ZIP encontrado
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Arquivo não encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Arquivo não encontrado"
+
+  /status:
+    get:
+      summary: Lista todos os arquivos ZIP gerados
+      tags:
+        - Status
+      responses:
+        '200':
+          description: Lista de arquivos processados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '500':
+          description: Erro interno ao listar arquivos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erro ao listar arquivos"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    StatusResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 3
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileInfo'
+
+    FileInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1111
+        filename:
+          type: string
+          example: frames_20250613_093000.zip
+        size:
+          type: string
+        created_at:
+          type: string
+        status:
+          type: string
+        download_url:
+          type: string
+          example: /download/frames_20250613_093000.zip
