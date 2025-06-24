@@ -55,7 +55,7 @@ public class UploadVideoUseCase {
         }
     }
 
-    public String getVideoSizeInMB(MultipartFile video) {
+    private String getVideoSizeInMB(MultipartFile video) {
         double sizeInMB = (double) video.getSize() / (1024 * 1024);
         return String.format("%.2f MB", sizeInMB);
     }

@@ -90,13 +90,4 @@ public class UploadVideoUseCaseTest {
         verify(s3FileStorageService).uploadVideo(any(), any());
         verifyNoInteractions(sqsMessageService);
     }
-    
-    @Test
-    void getVideoSizeInMB_ShouldReturnCorrectFormattedSize() {
-        // Act
-        String size = uploadVideoUseCase.getVideoSizeInMB(videoFile);
-        
-        // Assert
-        assertEquals("1,00 MB", size);
-    }
 }
