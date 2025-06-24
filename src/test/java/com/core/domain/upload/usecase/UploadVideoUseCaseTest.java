@@ -58,7 +58,7 @@ public class UploadVideoUseCaseTest {
         verify(createVideoCoreApiClient).createVideo(
             eq(clientId), 
             eq(videoFile.getOriginalFilename()), 
-            any(String.class), 
+            anyString(),
             eq("1,00 MB")
         );
         
