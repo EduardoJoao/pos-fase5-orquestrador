@@ -3,9 +3,16 @@ data "aws_eks_cluster" "eks" {
   name = "events-cluster"  # Nome do cluster EKS existente
 }
 
-# Busca o OIDC provider associado ao cluster
-data "aws_iam_openid_connect_provider" "eks" {
+# Obtém o certificado do OIDC provider
+data "tls_certificate" "eks" {
   url = data.aws_eks_cluster.eks.identity[0].oidc[0].issuer
+}
+
+# Cria o OIDC provider se ele não existir
+resource "aws_iam_openid_connect_provider" "eks" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.eks.certificates[0].sha1_fingerprint]
+  url             = data.aws_eks_cluster.eks.identity[0].oidc[0].issuer
 }
 
 # Busca os buckets S3 existentes por nome
@@ -32,7 +39,7 @@ resource "aws_iam_role" "video_api_irsa" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.eks.arn
+          Federated = aws_iam_openid_connect_provider.eks.arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
