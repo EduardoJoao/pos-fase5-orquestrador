@@ -30,7 +30,7 @@ spec:
         - containerPort: 8080
         env:
         - name: COGNITO
-          value: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_7uWuV8zaJ"
+          value: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_YrVoG2lcU"
         - name: CORE_URL
           value: "http://core-api-service.default.svc.cluster.local"
         - name: SQS_PROCESS
