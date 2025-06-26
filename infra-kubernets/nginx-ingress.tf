@@ -60,6 +60,37 @@ resource "helm_release" "ingress_nginx" {
     value = "256Mi"
   }
 
+  # CONFIGURAÇÕES GLOBAIS PARA RESOLVER O ERRO 413
+  set {
+    name  = "controller.config.proxy-body-size"
+    value = "100m"
+  }
+
+  set {
+    name  = "controller.config.client-max-body-size"
+    value = "100m"
+  }
+
+  set {
+    name  = "controller.config.proxy-connect-timeout"
+    value = "600"
+  }
+
+  set {
+    name  = "controller.config.proxy-send-timeout"
+    value = "600"
+  }
+
+  set {
+    name  = "controller.config.proxy-read-timeout"
+    value = "600"
+  }
+
+  set {
+    name  = "controller.config.proxy-buffer-size"
+    value = "128k"
+  }
+
   depends_on = [
     aws_eks_cluster.eks,
     aws_eks_node_group.primary
