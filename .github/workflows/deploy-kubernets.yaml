@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  terraform:
+  terraform-infrastructure:
     name: Deploy Kubernetes Infrastructure
     runs-on: ubuntu-latest
     defaults:
@@ -34,15 +34,52 @@ jobs:
       with:
         version: 'v3.12.0'
 
-    - name: Terraform Init
+    - name: Terraform Init - Infrastructure
       run: terraform init
 
-    - name: Terraform Validate
+    - name: Terraform Validate - Infrastructure
       run: terraform validate
 
-    - name: Terraform Plan
+    - name: Terraform Plan - Infrastructure
       run: terraform plan -input=false
 
-    - name: Terraform Apply
+    - name: Terraform Apply - Infrastructure
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/infra-kubernets'
+      run: terraform apply -auto-approve -input=false
+
+  terraform-iam:
+    name: Deploy IAM Configuration
+    runs-on: ubuntu-latest
+    needs: terraform-infrastructure  # Aguarda o job anterior terminar com sucesso
+    defaults:
+      run:
+        working-directory: ./infra-iam
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Terraform Init - IAM
+      run: terraform init
+
+    - name: Terraform Validate - IAM
+      run: terraform validate
+
+    - name: Terraform Plan - IAM
+      run: terraform plan -input=false
+
+    - name: Terraform Apply - IAM
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/infra-kubernets'
       run: terraform apply -auto-approve -input=false
