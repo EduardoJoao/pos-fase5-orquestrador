@@ -79,18 +79,6 @@ jobs:
         docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
         
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-
-    - name: Terraform Init (IAM video-api)
-      working-directory: ./k8s
-      run: terraform init
-
-    - name: Terraform Apply IAM for video-api
-      working-directory: ./k8s
-      run: terraform apply -auto-approve -target=aws_iam_role.video_api_irsa -target=aws_iam_policy.video_api_policy -target=aws_iam_role_policy_attachment.video_api_attach
-
     - name: Set up kubectl
       uses: azure/setup-kubectl@v1
       
