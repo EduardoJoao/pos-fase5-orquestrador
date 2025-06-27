@@ -32,7 +32,7 @@ spec:
         - name: COGNITO
           value: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_YrVoG2lcU"
         - name: CORE_URL
-          value: "http://core-api-service.default.svc.cluster.local"
+          value: "http://core-api-service.default.svc.cluster.local:80"
         - name: SQS_PROCESS
           value: "https://sqs.us-east-1.amazonaws.com/783545975704/video-processing-queue"
         - name: S3_BUCKET_NAME
