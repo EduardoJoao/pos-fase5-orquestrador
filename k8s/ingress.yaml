@@ -36,3 +36,10 @@ spec:
             name: video-api-service
             port:
               number: 80
+      - path: /videos
+        pathType: Prefix
+        backend:
+          service:
+            name: core-api-service
+            port:
+              number: 80
