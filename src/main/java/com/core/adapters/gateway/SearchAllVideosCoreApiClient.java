@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -26,10 +28,17 @@ public class SearchAllVideosCoreApiClient {
         String endpoint = coreApiUrl + "/videos";
 
         try {
+            // Criar headers com idClient
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("idClient", email);
+            
+            // Criar HttpEntity com headers
+            HttpEntity<?> entity = new HttpEntity<>(headers);
+
             ResponseEntity<List<Video>> response = restTemplate.exchange(
                 endpoint,
                 HttpMethod.GET,
-                null,
+                entity,  // Passar entity com headers em vez de null
                 new ParameterizedTypeReference<List<Video>>() {}
             );
 

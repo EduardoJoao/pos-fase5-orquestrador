@@ -4,10 +4,12 @@ import com.core.domain.core.model.Video;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,7 +63,7 @@ public class SearchAllVideosCoreApiClientTest {
         when(restTemplate.exchange(
             anyString(),
             eq(HttpMethod.GET),
-            isNull(),
+            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
             any(ParameterizedTypeReference.class)
         )).thenReturn(new ResponseEntity<>(mockVideos, HttpStatus.OK));
         
@@ -75,12 +77,19 @@ public class SearchAllVideosCoreApiClientTest {
         assertEquals("COMPLETED", result.get(0).getStatus());
         assertEquals("2", result.get(1).getId());
         
+        // Verificar se o método foi chamado com HttpEntity contendo o header
+        ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
         verify(restTemplate).exchange(
-            anyString(),
+            eq("http://test-api.com/videos"),
             eq(HttpMethod.GET),
-            isNull(),
+            entityCaptor.capture(),
             any(ParameterizedTypeReference.class)
         );
+        
+        // Verificar se o header idClient foi incluído
+        HttpEntity<?> capturedEntity = entityCaptor.getValue();
+        assertNotNull(capturedEntity.getHeaders());
+        assertEquals(userEmail, capturedEntity.getHeaders().getFirst("idClient"));
     }
     
     @Test
@@ -89,7 +98,7 @@ public class SearchAllVideosCoreApiClientTest {
         when(restTemplate.exchange(
             anyString(),
             eq(HttpMethod.GET),
-            isNull(),
+            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
             any(ParameterizedTypeReference.class)
         )).thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
         
@@ -103,7 +112,7 @@ public class SearchAllVideosCoreApiClientTest {
         verify(restTemplate).exchange(
             anyString(),
             eq(HttpMethod.GET),
-            isNull(),
+            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
             any(ParameterizedTypeReference.class)
         );
     }
@@ -114,7 +123,7 @@ public class SearchAllVideosCoreApiClientTest {
         when(restTemplate.exchange(
             anyString(),
             eq(HttpMethod.GET),
-            isNull(),
+            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
             any(ParameterizedTypeReference.class)
         )).thenReturn(new ResponseEntity<>(List.of(), HttpStatus.OK));
         
@@ -128,8 +137,35 @@ public class SearchAllVideosCoreApiClientTest {
         verify(restTemplate).exchange(
             anyString(),
             eq(HttpMethod.GET),
-            isNull(),
+            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
             any(ParameterizedTypeReference.class)
         );
+    }
+
+    @Test
+    void getAllVideos_ShouldIncludeCorrectIdClientHeader() {
+        // Arrange
+        when(restTemplate.exchange(
+            anyString(),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class)
+        )).thenReturn(new ResponseEntity<>(mockVideos, HttpStatus.OK));
+        
+        // Act
+        searchAllVideosCoreApiClient.getAllVideos(userEmail);
+        
+        // Assert
+        ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate).exchange(
+            eq("http://test-api.com/videos"),
+            eq(HttpMethod.GET),
+            entityCaptor.capture(),
+            any(ParameterizedTypeReference.class)
+        );
+        
+        // Verificar se o header idClient contém o email correto
+        HttpEntity<?> capturedEntity = entityCaptor.getValue();
+        assertEquals("user@example.com", capturedEntity.getHeaders().getFirst("idClient"));
     }
 }
