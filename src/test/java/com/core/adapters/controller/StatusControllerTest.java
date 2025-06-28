@@ -19,48 +19,48 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
-// @ExtendWith(MockitoExtension.class)
-// public class StatusControllerTest {
+@ExtendWith(MockitoExtension.class)
+public class StatusControllerTest {
 
-//     @Mock
-//     private SearchAllVideosUseCase searchAllVideosUseCase;
+    @Mock
+    private SearchAllVideosUseCase searchAllVideosUseCase;
 
-//     @Mock
-//     private JwtTokenUtil jwtTokenUtil;
+    @Mock
+    private JwtTokenUtil jwtTokenUtil;
 
-//     @InjectMocks
-//     private StatusController statusController;
+    @InjectMocks
+    private StatusController statusController;
 
-//     private final String userEmail = "user@example.com";
-//     private StatusResponse mockResponse;
+    private final String userEmail = "user@example.com";
+    private StatusResponse mockResponse;
 
-//     @BeforeEach
-//     void setUp() {
-//         List<FileInfo> files = Arrays.asList(
-//             FileInfo.builder().id("1").filename("video1.zip").build(),
-//             FileInfo.builder().id("2").filename("video2.zip").build()
-//         );
-//         mockResponse = StatusResponse.builder()
-//             .total(2)
-//             .files(files)
-//             .build();
+    @BeforeEach
+    void setUp() {
+        List<FileInfo> files = Arrays.asList(
+            FileInfo.builder().id("1").filename("video1.zip").build(),
+            FileInfo.builder().id("2").filename("video2.zip").build()
+        );
+        mockResponse = StatusResponse.builder()
+            .total(2)
+            .files(files)
+            .build();
 
-//         when(jwtTokenUtil.getEmailFromToken()).thenReturn(userEmail);
-//         when(searchAllVideosUseCase.execute(userEmail)).thenReturn(mockResponse);
-//     }
+        when(jwtTokenUtil.getEmailFromToken()).thenReturn(userEmail);
+        when(searchAllVideosUseCase.execute(userEmail)).thenReturn(mockResponse);
+    }
 
-//     @Test
-//     void statusGet_ShouldReturnStatusResponseFromUseCase() {
-//         // Act
-//         ResponseEntity<StatusResponse> response = statusController.statusGet();
+    @Test
+    void statusGet_ShouldReturnStatusResponseFromUseCase() {
+        // Act
+        ResponseEntity<StatusResponse> response = statusController.statusGet();
         
-//         // Assert
-//         assertNotNull(response);
-//         assertEquals(mockResponse, response.getBody());
-//         assertEquals(2, response.getBody().getTotal());
-//         assertEquals(2, response.getBody().getFiles().size());
+        // Assert
+        assertNotNull(response);
+        assertEquals(mockResponse, response.getBody());
+        assertEquals(2, response.getBody().getTotal());
+        assertEquals(2, response.getBody().getFiles().size());
         
-//         verify(jwtTokenUtil, times(1)).getEmailFromToken();
-//         verify(searchAllVideosUseCase, times(1)).execute(userEmail);
-//     }
-// }
+        verify(jwtTokenUtil, times(1)).getEmailFromToken();
+        verify(searchAllVideosUseCase, times(1)).execute(userEmail);
+    }
+}
