@@ -18,7 +18,8 @@ public class StatusController implements StatusApi {
 
     @Override
     public ResponseEntity<StatusResponse> statusGet(){
-        String email = jwtTokenUtil.getEmailFromToken();
-        return  ResponseEntity.ok(searchAllVideosUseCase.execute(email));
+        // String email = jwtTokenUtil.getEmailFromToken();
+        // return  ResponseEntity.ok(searchAllVideosUseCase.execute(email));
+        return null;
     }
 }
