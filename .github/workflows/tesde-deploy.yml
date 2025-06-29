@@ -10,7 +10,7 @@ jobs:
     name: SonarQube Analysis
     runs-on: ubuntu-latest
     # Execute a análise Sonar apenas quando for um pull request
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
 
     steps:
       - uses: actions/checkout@v3
@@ -53,6 +53,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     # Execute o deploy apenas quando for um push para main
+    needs: sonarqube
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
