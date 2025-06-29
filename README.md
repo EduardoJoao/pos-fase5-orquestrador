@@ -1,73 +1,115 @@
-# Serviço de Pedidos - Sistema de Gestão para Fast Food
+# FIAP X - Processador de Vídeos (Orquestrador)
 
-Este serviço gerencia pedidos e produtos para um sistema de lanchonete de fast food, oferecendo endpoints para criação, listagem e gerenciamento de produtos e pedidos.
+Este serviço é responsável pelo orquestramento do processamento de vídeos, oferecendo endpoints para upload, status e download de vídeos com extração de frames.
 
 ## Responsabilidades
 
-- Gerenciamento completo do catálogo de produtos (CRUD)
-- Processamento de pedidos dos clientes
-- Acompanhamento do status dos pedidos (fluxo completo, do registro à entrega)
-- Controle do status de pagamento dos pedidos
+- **Upload de Vídeos**: Recebe arquivos de vídeo via multipart/form-data
+- **Processamento Assíncrono**: Coordena o processamento de vídeos para extração de frames
+- **Gerenciamento de Status**: Monitora e controla o status dos processamentos
+- **Download de Resultados**: Disponibiliza os frames processados em formato ZIP
+- **Integração com AWS**: Utiliza S3 para armazenamento e SQS para filas de processamento
 
 ## Endpoints Disponíveis
 
-### Produtos
+### Upload
 
 | Método | Endpoint | Descrição | Autenticação |
 |--------|----------|-----------|--------------|
-| POST | `/produtos` | Criar um novo produto | Não |
-| GET | `/produtos?categoria={categoria}` | Listar produtos por categoria | Não |
-| PUT | `/produtos/{id}` | Atualizar um produto existente | Não |
-| DELETE | `/produtos/{id}` | Remover um produto | Não |
+| POST | `/upload` | Faz upload de um vídeo e inicia processamento | Sim |
 
-### Pedidos
+### Download
 
 | Método | Endpoint | Descrição | Autenticação |
 |--------|----------|-----------|--------------|
-| POST | `/pedidos` | Criar um novo pedido | **Token JWT requerido** |
-| GET | `/pedidos` | Listar todos os pedidos | **Token JWT requerido** |
-| PATCH | `/pedidos/{id}` | Alterar o status de um pedido | **Token JWT requerido** |
+| POST | `/download/process-and-download` | Upload, processa e retorna ZIP com frames | Sim |
+| POST | `/download/{id}` | Baixa arquivo ZIP dos frames processados | Sim |
+
+### Status
+
+| Método | Endpoint | Descrição | Autenticação |
+|--------|----------|-----------|--------------|
+| GET | `/status` | Lista todos os arquivos ZIP gerados | Sim |
 
 ## Modelos de Dados
 
-### Produto
+### Resposta de Status
 ```json
 {
-  "id": "string",
-  "nome": "Hambúrguer",
-  "descricao": "Hambúrguer artesanal com queijo, alface e tomate",
-  "preco": 15.99,
-  "categoria": "LANCHE"
+  "total": 3,
+  "files": [
+    {
+      "id": "1111",
+      "filename": "frames_20250613_093000.zip",
+      "size": "2.5MB",
+      "created_at": "2025-06-13T09:30:00Z",
+      "status": "COMPLETED",
+      "download_url": "/download/frames_20250613_093000.zip"
+    }
+  ]
 }
 ```
 
-### Pedido
+### Informações do Arquivo
 ```json
 {
-  "id": "string",
-  "cpfCliente": "string",
-  "produtos": [
-    {
-      "id": "string",
-      "nome": "string",
-      "descricao": "string",
-      "preco": 0,
-      "categoria": "LANCHE"
-    }
-  ],
-  "statusPedido": "CRIADO",
-  "statusPagamento": "PENDENTE",
-  "total": 29.99,
-  "dataCriacao": "string"
+  "id": "1111",
+  "filename": "frames_20250613_093000.zip",
+  "size": "2.5MB",
+  "created_at": "2025-06-13T09:30:00Z",
+  "status": "COMPLETED",
+  "download_url": "/download/frames_20250613_093000.zip"
 }
 ```
+## Arquitetura
+
+### Componentes do Sistema
+
+- **Orquestrador** (este serviço): Coordena o fluxo de processamento
+- **Core API**: Serviço responsável pelo processamento efetivo dos vídeos
+- **Amazon S3**: Armazenamento de vídeos originais e processados
+- **Amazon SQS**: Fila para processamento assíncrono
+- **Amazon Cognito**: Autenticação e autorização
+
+### Fluxo de Processamento
+
+1. Cliente faz upload do vídeo via `/upload`
+2. Vídeo é armazenado no S3 bucket de uploads
+3. Mensagem é enviada para a fila SQS
+4. processor processa o vídeo e extrai frames
+5. Frames são compactados em ZIP e armazenados no S3 de downloads
+6. Cliente pode verificar status via `/status`
+7. Cliente faz download do ZIP via `/download/{id}`
+
+## Como Executar
+
 ```bash
 # Build
 mvn clean package
 
 # Cobertura de teste
 mvn verify
+```
 
+## Deploy no Kubernetes
+
+O projeto inclui configurações para deploy no AWS EKS:
+
+- Branch infra-kubernets tem uma esteira de deploy configurando todo o cluster.
+- Branch main ou develop existe duas pastas que vem ser executadas via terraform a infra-db deve ser inputado no arquivo terraform.tfvars os outputs da infra-kubernets e a ProtheusGrafana.
+
+- Pasta k8s tem as configs do serviço deployment, service e ingress a esteira está preparada para fazer o deploy.
+- `k8s/deployment.yaml`: Configuração do deployment e service
+- `k8s/ingress.yaml`: Configuração do ingress para roteamento
+
+```bash
+# Deploy da aplicação
+kubectl apply -f k8s/
+
+# Deploy do monitoramento (Prometheus + Grafana)
+cd PrometheusGrafana
+terraform init
+terraform apply
 ```
 
 ## Evidência de cobertura de teste
