@@ -59,7 +59,7 @@ public class UploadVideoUseCaseTest {
             eq(clientId), 
             eq(videoFile.getOriginalFilename()), 
             anyString(),
-            eq("1,00 MB")
+            eq("1.00 MB")
         );
         
         verify(s3FileStorageService).uploadVideo(
