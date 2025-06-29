@@ -52,14 +52,12 @@ public class UploadVideoUseCaseTest {
     @Test
     void execute_ShouldProcessVideoUploadSuccessfully() throws IOException {
         // Act
-        uploadVideoUseCase.execute(videoFile, clientId);
-        
-        // Assert
+        uploadVideoUseCase.execute(videoFile, clientId);        // Assert
         verify(createVideoCoreApiClient).createVideo(
             eq(clientId), 
             eq(videoFile.getOriginalFilename()), 
             anyString(),
-            eq("1.00 MB")
+            eq("1.00 MB") // Agora sempre será formatado em inglês (US)
         );
         
         verify(s3FileStorageService).uploadVideo(
