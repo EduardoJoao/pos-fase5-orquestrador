@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 @Service
@@ -53,10 +54,8 @@ public class UploadVideoUseCase {
             log.error("Failed to process video upload", e);
             throw new RuntimeException("Failed to process video upload: " + e.getMessage());
         }
-    }
-
-    private String getVideoSizeInMB(MultipartFile video) {
+    }    private String getVideoSizeInMB(MultipartFile video) {
         double sizeInMB = (double) video.getSize() / (1024 * 1024);
-        return String.format("%.2f MB", sizeInMB);
+        return String.format(Locale.US, "%.2f MB", sizeInMB);
     }
 }
