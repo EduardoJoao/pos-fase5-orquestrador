@@ -121,10 +121,7 @@
 				<version>0.8.10</version>
 				<configuration>
 					<excludes>
-						<exclude>**/swagger/**</exclude>
 						<exclude>**/config/**</exclude>
-						<exclude>**/domain/core/**</exclude>
-						<exclude>**/org/openapitools/**</exclude>
 						<exclude>**/Application.java</exclude>
 					</excludes>
 				</configuration>
