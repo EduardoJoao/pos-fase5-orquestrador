@@ -38,6 +38,8 @@
 		<!-- Exclusões -->
 		<sonar.coverage.exclusions>
 			**/config/**,
+			**/domain/core/**,
+			**/openapitools/**,
 			**/Application.java
 		</sonar.coverage.exclusions>
 	</properties>
@@ -122,6 +124,8 @@
 				<configuration>
 					<excludes>
 						<exclude>**/config/**</exclude>
+						<exclude>**/domain/core/**</exclude>
+						<exclude>**/openapitools/**</exclude>
 						<exclude>**/Application.java</exclude>
 					</excludes>
 				</configuration>
