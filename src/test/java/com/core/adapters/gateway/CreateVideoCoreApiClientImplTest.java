@@ -18,13 +18,13 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class CreateVideoCoreApiClientTest {
+public class CreateVideoCoreApiClientImplTest {
 
     @Mock
     private RestTemplate restTemplate;
 
     @InjectMocks
-    private CreateVideoCoreApiClient createVideoCoreApiClient;
+    private CreateVideoCoreApiClientImpl createVideoCoreApiClientImpl;
 
     private final String clientId = "user-123";
     private final String filename = "test-video.mp4";
@@ -33,11 +33,10 @@ public class CreateVideoCoreApiClientTest {
     
     @BeforeEach
     void setUp() {
-        // Configurando variável de ambiente para teste
         try {
-            var field = createVideoCoreApiClient.getClass().getDeclaredField("coreApiUrl");
+            var field = createVideoCoreApiClientImpl.getClass().getDeclaredField("coreApiUrl");
             field.setAccessible(true);
-            field.set(createVideoCoreApiClient, "http://test-api.com");
+            field.set(createVideoCoreApiClientImpl, "http://test-api.com");
         } catch (Exception e) {
             fail("Failed to set coreApiUrl field");
         }
@@ -45,17 +44,14 @@ public class CreateVideoCoreApiClientTest {
 
     @Test
     void createVideo_ShouldPostVideoDataSuccessfully() {
-        // Arrange
         when(restTemplate.postForEntity(
             anyString(),
             any(VideoRequset.class),
             eq(Void.class)
         )).thenReturn(new ResponseEntity<>(null, HttpStatus.OK));
         
-        // Act
-        createVideoCoreApiClient.createVideo(clientId, filename, uuid, sizeVideo);
+        createVideoCoreApiClientImpl.createVideo(clientId, filename, uuid, sizeVideo);
         
-        // Assert
         ArgumentCaptor<VideoRequset> requestCaptor = ArgumentCaptor.forClass(VideoRequset.class);
         verify(restTemplate).postForEntity(
             contains("/videos"),
@@ -72,16 +68,14 @@ public class CreateVideoCoreApiClientTest {
     
     @Test
     void createVideo_WhenApiReturnsError_ShouldThrowRuntimeException() {
-        // Arrange
         when(restTemplate.postForEntity(
             anyString(),
             any(VideoRequset.class),
             eq(Void.class)
         )).thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
         
-        // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> 
-            createVideoCoreApiClient.createVideo(clientId, filename, uuid, sizeVideo)
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            createVideoCoreApiClientImpl.createVideo(clientId, filename, uuid, sizeVideo)
         );
         
         assertTrue(exception.getMessage().contains("Failed to validate video"));

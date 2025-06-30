@@ -1,6 +1,7 @@
 package com.core.domain.upload.usecase;
 
 import com.core.adapters.gateway.CreateVideoCoreApiClient;
+import com.core.adapters.gateway.CreateVideoCoreApiClientImpl;
 import com.core.domain.upload.activity.S3FileStorageService;
 import com.core.domain.upload.activity.SQSMessageService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +20,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class UploadVideoUseCaseTest {
+public class UploadVideoUseCaseImplTest {
 
     @Mock
     private CreateVideoCoreApiClient createVideoCoreApiClient;
@@ -31,7 +32,7 @@ public class UploadVideoUseCaseTest {
     private SQSMessageService sqsMessageService;
 
     @InjectMocks
-    private UploadVideoUseCase uploadVideoUseCase;
+    private UploadVideoUseCaseImpl uploadVideoUseCaseImpl;
 
     @Captor
     private ArgumentCaptor<Map<String, Object>> messageCaptor;
@@ -52,7 +53,7 @@ public class UploadVideoUseCaseTest {
     @Test
     void execute_ShouldProcessVideoUploadSuccessfully() throws IOException {
         // Act
-        uploadVideoUseCase.execute(videoFile, clientId);        // Assert
+        uploadVideoUseCaseImpl.execute(videoFile, clientId);        // Assert
         verify(createVideoCoreApiClient).createVideo(
             eq(clientId), 
             eq(videoFile.getOriginalFilename()), 
@@ -83,7 +84,7 @@ public class UploadVideoUseCaseTest {
             .uploadVideo(any(MultipartFile.class), anyString());
         
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> uploadVideoUseCase.execute(videoFile, clientId));
+        assertThrows(RuntimeException.class, () -> uploadVideoUseCaseImpl.execute(videoFile, clientId));
         verify(createVideoCoreApiClient).createVideo(any(), any(), any(), any());
         verify(s3FileStorageService).uploadVideo(any(), any());
         verifyNoInteractions(sqsMessageService);

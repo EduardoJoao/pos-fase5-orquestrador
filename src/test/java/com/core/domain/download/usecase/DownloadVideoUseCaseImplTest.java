@@ -14,7 +14,6 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
@@ -23,7 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class DownloadVideoUseCaseTest {
+public class DownloadVideoUseCaseImplTest {
 
     @Mock
     private SearchIdVideoCoreApiClient searchIdVideoCoreApiClient;
@@ -32,7 +31,7 @@ public class DownloadVideoUseCaseTest {
     private S3Client s3Client;
 
     @InjectMocks
-    private DownloadVideoUseCase downloadVideoUseCase;
+    private DownloadVideoUseCaseImpl downloadVideoUseCaseImpl;
 
     private final String videoId = "video-123";
     private final String userId = "user-456";
@@ -42,11 +41,10 @@ public class DownloadVideoUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        // Configurando variável de ambiente para teste
         try {
-            var field = downloadVideoUseCase.getClass().getDeclaredField("bucketName");
+            var field = downloadVideoUseCaseImpl.getClass().getDeclaredField("bucketName");
             field.setAccessible(true);
-            field.set(downloadVideoUseCase, "test-bucket");
+            field.set(downloadVideoUseCaseImpl, "test-bucket");
         } catch (Exception e) {
             fail("Failed to set bucketName field");
         }
@@ -61,7 +59,6 @@ public class DownloadVideoUseCaseTest {
 
     @Test
     void execute_ShouldDownloadFileSuccessfully() throws IOException {
-        // Arrange
         when(searchIdVideoCoreApiClient.validateVideo(videoId)).thenReturn(mockVideo);
         
         ResponseInputStream<GetObjectResponse> mockResponse = mock(ResponseInputStream.class);
@@ -75,10 +72,8 @@ public class DownloadVideoUseCaseTest {
         
         when(s3Client.getObject(any(GetObjectRequest.class))).thenReturn(mockResponse);
         
-        // Act
-        byte[] result = downloadVideoUseCase.execute(videoId);
+        byte[] result = downloadVideoUseCaseImpl.execute(videoId);
         
-        // Assert
         assertNotNull(result);
         verify(searchIdVideoCoreApiClient).validateVideo(videoId);
         verify(s3Client).getObject(any(GetObjectRequest.class));
@@ -86,12 +81,10 @@ public class DownloadVideoUseCaseTest {
     
     @Test
     void execute_WhenVideoNotFound_ShouldThrowException() {
-        // Arrange
         when(searchIdVideoCoreApiClient.validateVideo(videoId)).thenReturn(null);
         
-        // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> 
-            downloadVideoUseCase.execute(videoId)
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            downloadVideoUseCaseImpl.execute(videoId)
         );
         assertTrue(exception.getMessage().contains("não encontrado"));
         verify(searchIdVideoCoreApiClient).validateVideo(videoId);
@@ -100,14 +93,12 @@ public class DownloadVideoUseCaseTest {
     
     @Test
     void execute_WhenS3KeyNotFound_ShouldThrowException() {
-        // Arrange
         when(searchIdVideoCoreApiClient.validateVideo(videoId)).thenReturn(mockVideo);
         when(s3Client.getObject(any(GetObjectRequest.class)))
             .thenThrow(NoSuchKeyException.builder().build());
         
-        // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> 
-            downloadVideoUseCase.execute(videoId)
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            downloadVideoUseCaseImpl.execute(videoId)
         );
         assertTrue(exception.getMessage().contains("não encontrado no S3"));
         verify(searchIdVideoCoreApiClient).validateVideo(videoId);

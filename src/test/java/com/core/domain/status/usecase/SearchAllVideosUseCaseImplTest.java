@@ -18,20 +18,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class SearchAllVideosUseCaseTest {
+public class SearchAllVideosUseCaseImplTest {
 
     @Mock
     private SearchAllVideosCoreApiClient searchAllVideosCoreApiClient;
 
     @InjectMocks
-    private SearchAllVideosUseCase searchAllVideosUseCase;
+    private SearchAllVideosUseCaseImpl searchAllVideosUseCaseImpl;
 
     private final String clientEmail = "user@example.com";
     private List<Video> mockVideos;
 
     @BeforeEach
     void setUp() {
-        // Setup mock videos
         Video video1 = new Video();
         video1.setId("1");
         video1.setUserId("user-1");
@@ -53,13 +52,10 @@ public class SearchAllVideosUseCaseTest {
 
     @Test
     void execute_ShouldReturnStatusResponseWithVideos() {
-        // Arrange
         when(searchAllVideosCoreApiClient.getAllVideos(clientEmail)).thenReturn(mockVideos);
         
-        // Act
-        StatusResponse result = searchAllVideosUseCase.execute(clientEmail);
+        StatusResponse result = searchAllVideosUseCaseImpl.execute(clientEmail);
         
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.getTotal());
         assertEquals(2, result.getFiles().size());
@@ -72,27 +68,22 @@ public class SearchAllVideosUseCaseTest {
     
     @Test
     void execute_WhenApiClientThrowsException_ShouldReturnNull() {
-        // Arrange
+
         when(searchAllVideosCoreApiClient.getAllVideos(clientEmail))
             .thenThrow(new RuntimeException("API Error"));
         
-        // Act
-        StatusResponse result = searchAllVideosUseCase.execute(clientEmail);
+        StatusResponse result = searchAllVideosUseCaseImpl.execute(clientEmail);
         
-        // Assert
         assertNull(result);
         verify(searchAllVideosCoreApiClient).getAllVideos(clientEmail);
     }
     
     @Test
     void execute_WhenNoVideosFound_ShouldReturnEmptyResponse() {
-        // Arrange
         when(searchAllVideosCoreApiClient.getAllVideos(clientEmail)).thenReturn(List.of());
         
-        // Act
-        StatusResponse result = searchAllVideosUseCase.execute(clientEmail);
+        StatusResponse result = searchAllVideosUseCaseImpl.execute(clientEmail);
         
-        // Assert
         assertNotNull(result);
         assertEquals(0, result.getTotal());
         assertTrue(result.getFiles().isEmpty());
