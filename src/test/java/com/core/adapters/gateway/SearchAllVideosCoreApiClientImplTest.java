@@ -24,13 +24,13 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class SearchAllVideosCoreApiClientTest {
+public class SearchAllVideosCoreApiClientImplTest {
 
     @Mock
     private RestTemplate restTemplate;
 
     @InjectMocks
-    private SearchAllVideosCoreApiClient searchAllVideosCoreApiClient;
+    private SearchAllVideosCoreApiClientImpl searchAllVideosCoreApiClientImpl;
 
     private final String userEmail = "user@example.com";
     private List<Video> mockVideos;
@@ -47,11 +47,10 @@ public class SearchAllVideosCoreApiClientTest {
         
         mockVideos = Arrays.asList(video1, video2);
         
-        // Configurando variável de ambiente para teste
         try {
-            var field = searchAllVideosCoreApiClient.getClass().getDeclaredField("coreApiUrl");
+            var field = searchAllVideosCoreApiClientImpl.getClass().getDeclaredField("coreApiUrl");
             field.setAccessible(true);
-            field.set(searchAllVideosCoreApiClient, "http://test-api.com");
+            field.set(searchAllVideosCoreApiClientImpl, "http://test-api.com");
         } catch (Exception e) {
             fail("Failed to set coreApiUrl field");
         }
@@ -59,92 +58,6 @@ public class SearchAllVideosCoreApiClientTest {
 
     @Test
     void getAllVideos_ShouldReturnListOfVideos() {
-        // Arrange
-        when(restTemplate.exchange(
-            anyString(),
-            eq(HttpMethod.GET),
-            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
-            any(ParameterizedTypeReference.class)
-        )).thenReturn(new ResponseEntity<>(mockVideos, HttpStatus.OK));
-        
-        // Act
-        List<Video> result = searchAllVideosCoreApiClient.getAllVideos(userEmail);
-        
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("1", result.get(0).getId());
-        assertEquals("COMPLETED", result.get(0).getStatus());
-        assertEquals("2", result.get(1).getId());
-        
-        // Verificar se o método foi chamado com HttpEntity contendo o header
-        ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
-        verify(restTemplate).exchange(
-            eq("http://test-api.com/videos"),
-            eq(HttpMethod.GET),
-            entityCaptor.capture(),
-            any(ParameterizedTypeReference.class)
-        );
-        
-        // Verificar se o header idClient foi incluído
-        HttpEntity<?> capturedEntity = entityCaptor.getValue();
-        assertNotNull(capturedEntity.getHeaders());
-        assertEquals(userEmail, capturedEntity.getHeaders().getFirst("idClient"));
-    }
-    
-    @Test
-    void getAllVideos_WhenApiReturnsError_ShouldThrowRuntimeException() {
-        // Arrange
-        when(restTemplate.exchange(
-            anyString(),
-            eq(HttpMethod.GET),
-            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
-            any(ParameterizedTypeReference.class)
-        )).thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
-        
-        // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> 
-            searchAllVideosCoreApiClient.getAllVideos(userEmail)
-        );
-        
-        assertTrue(exception.getMessage().contains("Failed to retrieve videos"));
-        
-        verify(restTemplate).exchange(
-            anyString(),
-            eq(HttpMethod.GET),
-            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
-            any(ParameterizedTypeReference.class)
-        );
-    }
-    
-    @Test
-    void getAllVideos_WhenApiReturnsEmptyList_ShouldReturnEmptyList() {
-        // Arrange
-        when(restTemplate.exchange(
-            anyString(),
-            eq(HttpMethod.GET),
-            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
-            any(ParameterizedTypeReference.class)
-        )).thenReturn(new ResponseEntity<>(List.of(), HttpStatus.OK));
-        
-        // Act
-        List<Video> result = searchAllVideosCoreApiClient.getAllVideos(userEmail);
-        
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        
-        verify(restTemplate).exchange(
-            anyString(),
-            eq(HttpMethod.GET),
-            any(HttpEntity.class),  // Mudado de isNull() para any(HttpEntity.class)
-            any(ParameterizedTypeReference.class)
-        );
-    }
-
-    @Test
-    void getAllVideos_ShouldIncludeCorrectIdClientHeader() {
-        // Arrange
         when(restTemplate.exchange(
             anyString(),
             eq(HttpMethod.GET),
@@ -152,10 +65,14 @@ public class SearchAllVideosCoreApiClientTest {
             any(ParameterizedTypeReference.class)
         )).thenReturn(new ResponseEntity<>(mockVideos, HttpStatus.OK));
         
-        // Act
-        searchAllVideosCoreApiClient.getAllVideos(userEmail);
+        List<Video> result = searchAllVideosCoreApiClientImpl.getAllVideos(userEmail);
         
-        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("1", result.get(0).getId());
+        assertEquals("COMPLETED", result.get(0).getStatus());
+        assertEquals("2", result.get(1).getId());
+        
         ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
         verify(restTemplate).exchange(
             eq("http://test-api.com/videos"),
@@ -164,7 +81,75 @@ public class SearchAllVideosCoreApiClientTest {
             any(ParameterizedTypeReference.class)
         );
         
-        // Verificar se o header idClient contém o email correto
+        HttpEntity<?> capturedEntity = entityCaptor.getValue();
+        assertNotNull(capturedEntity.getHeaders());
+        assertEquals(userEmail, capturedEntity.getHeaders().getFirst("idClient"));
+    }
+    
+    @Test
+    void getAllVideos_WhenApiReturnsError_ShouldThrowRuntimeException() {
+        when(restTemplate.exchange(
+            anyString(),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class)
+        )).thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+        
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            searchAllVideosCoreApiClientImpl.getAllVideos(userEmail)
+        );
+        
+        assertTrue(exception.getMessage().contains("Failed to retrieve videos"));
+        
+        verify(restTemplate).exchange(
+            anyString(),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class)
+        );
+    }
+    
+    @Test
+    void getAllVideos_WhenApiReturnsEmptyList_ShouldReturnEmptyList() {
+        when(restTemplate.exchange(
+            anyString(),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class)
+        )).thenReturn(new ResponseEntity<>(List.of(), HttpStatus.OK));
+        
+        List<Video> result = searchAllVideosCoreApiClientImpl.getAllVideos(userEmail);
+        
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        
+        verify(restTemplate).exchange(
+            anyString(),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class)
+        );
+    }
+
+    @Test
+    void getAllVideos_ShouldIncludeCorrectIdClientHeader() {
+        when(restTemplate.exchange(
+            anyString(),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class)
+        )).thenReturn(new ResponseEntity<>(mockVideos, HttpStatus.OK));
+        
+        searchAllVideosCoreApiClientImpl.getAllVideos(userEmail);
+        
+        ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate).exchange(
+            eq("http://test-api.com/videos"),
+            eq(HttpMethod.GET),
+            entityCaptor.capture(),
+            any(ParameterizedTypeReference.class)
+        );
+        
         HttpEntity<?> capturedEntity = entityCaptor.getValue();
         assertEquals("user@example.com", capturedEntity.getHeaders().getFirst("idClient"));
     }

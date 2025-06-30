@@ -17,13 +17,13 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class SearchIdVideoCoreApiClientTest {
+public class SearchIdVideoCoreApiClientImplTest {
 
     @Mock
     private RestTemplate restTemplate;
 
     @InjectMocks
-    private SearchIdVideoCoreApiClient searchIdVideoCoreApiClient;
+    private SearchIdVideoCoreApiClientImpl searchIdVideoCoreApiClientImpl;
 
     private final String videoId = "video-123";
     private Video mockVideo;
@@ -34,11 +34,10 @@ public class SearchIdVideoCoreApiClientTest {
         mockVideo.setId(videoId);
         mockVideo.setStatus("COMPLETED");
         
-        // Configurando variável de ambiente para teste
         try {
-            var field = searchIdVideoCoreApiClient.getClass().getDeclaredField("coreApiUrl");
+            var field = searchIdVideoCoreApiClientImpl.getClass().getDeclaredField("coreApiUrl");
             field.setAccessible(true);
-            field.set(searchIdVideoCoreApiClient, "http://test-api.com");
+            field.set(searchIdVideoCoreApiClientImpl, "http://test-api.com");
         } catch (Exception e) {
             fail("Failed to set coreApiUrl field");
         }
@@ -46,16 +45,13 @@ public class SearchIdVideoCoreApiClientTest {
 
     @Test
     void validateVideo_ShouldReturnVideoWhenFound() {
-        // Arrange
         when(restTemplate.getForEntity(
             contains("/videos/" + videoId),
             eq(Video.class)
         )).thenReturn(new ResponseEntity<>(mockVideo, HttpStatus.OK));
         
-        // Act
-        Video result = searchIdVideoCoreApiClient.validateVideo(videoId);
+        Video result = searchIdVideoCoreApiClientImpl.validateVideo(videoId);
         
-        // Assert
         assertNotNull(result);
         assertEquals(videoId, result.getId());
         assertEquals("COMPLETED", result.getStatus());
@@ -64,15 +60,13 @@ public class SearchIdVideoCoreApiClientTest {
     
     @Test
     void validateVideo_WhenApiReturnsNotFound_ShouldThrowRuntimeException() {
-        // Arrange
         when(restTemplate.getForEntity(
             contains("/videos/" + videoId),
             eq(Video.class)
         )).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
         
-        // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> 
-            searchIdVideoCoreApiClient.validateVideo(videoId)
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            searchIdVideoCoreApiClientImpl.validateVideo(videoId)
         );
         
         assertTrue(exception.getMessage().contains("Failed to validate video"));
@@ -81,15 +75,13 @@ public class SearchIdVideoCoreApiClientTest {
     
     @Test
     void validateVideo_WhenApiReturnsServerError_ShouldThrowRuntimeException() {
-        // Arrange
         when(restTemplate.getForEntity(
             anyString(),
             eq(Video.class)
         )).thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
         
-        // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> 
-            searchIdVideoCoreApiClient.validateVideo(videoId)
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            searchIdVideoCoreApiClientImpl.validateVideo(videoId)
         );
         
         assertTrue(exception.getMessage().contains("Failed to validate video"));
